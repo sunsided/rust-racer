@@ -1,0 +1,72 @@
+# ECS spec: sillyecs reads this in build.rs and generates the World, components and systems.
+
+# Generate the unchecked archetype fast-paths wrapped in `unsafe` blocks.
+allow_unsafe: true
+
+states:
+  - name: Race
+    description: Track geometry, driver input, the player snapshot and the per-segment traffic index.
+
+components:
+  - name: TrackPosition
+  - name: Speed
+  - name: CarModel
+  - name: Driver
+
+archetypes:
+  - name: Car
+    description: An AI car driving along the track.
+    components:
+      - TrackPosition
+      - Speed
+      - CarModel
+
+  - name: Player
+    description: The car the player drives.
+    components:
+      - TrackPosition
+      - Speed
+      - Driver
+
+phases:
+  - name: FixedUpdate
+    fixed: 60 Hz
+
+systems:
+  - name: Traffic
+    phase: FixedUpdate
+    states:
+      - use: Race
+    inputs:
+      - Speed
+      - CarModel
+    outputs:
+      - TrackPosition
+
+  - name: TrafficIndex
+    phase: FixedUpdate
+    run_after: [Traffic]
+    states:
+      - use: Race
+        write: true
+    inputs:
+      - TrackPosition
+      - Speed
+      - CarModel
+
+  - name: Driving
+    phase: FixedUpdate
+    run_after: [TrafficIndex]
+    states:
+      - use: Race
+        write: true
+    outputs:
+      - TrackPosition
+      - Speed
+      - Driver
+
+worlds:
+  - name: Main
+    archetypes:
+      - Car
+      - Player

@@ -1,0 +1,27 @@
+[package]
+name = "rust-racer"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+publish = false
+description = "An OutRun-style pseudo-3D racer, ported from jakesgordon/javascript-racer onto game-toolkit."
+
+[dependencies]
+game-toolkit = { version = "0.3", features = ["ecs"] }
+# Only for `Tween`, to turn the music down on the handle `Audio::play` returns.
+kira = { version = "0.12", default-features = false }
+log = "0.4"
+# The generated ECS code logs via tracing and offers a rayon-parallel phase runner.
+rayon = "1"
+tracing = "0.1"
+
+# Native builds log via env_logger; on the web the toolkit logs to the browser console.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger = "0.11"
+
+[build-dependencies]
+sillyecs = "0.0.6"
+
+# Decoding the music and pushing ~5k quads a frame is painfully slow unoptimized.
+[profile.dev.package."*"]
+opt-level = 3
