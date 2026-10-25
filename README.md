@@ -32,4 +32,5 @@ after adding files to `assets/`, so the web build preloads them.
 
 Game design, graphics and music are from
 [javascript-racer](https://github.com/jakesgordon/javascript-racer),
-Copyright (c) 2012-2016 Jake Gordon and contributors, MIT licensed.
+Copyright (c) 2012-2016 Jake Gordon and contributors, MIT licensed. See
+[LICENSE-javascript-racer](LICENSE-javascript-racer).
