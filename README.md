@@ -22,6 +22,7 @@ Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
   Seven systems run in the 60 Hz `FixedUpdate` phase: `Traffic` (AI steering and movement),
   `TrafficIndex` (buckets cars into segments), `Driving` (the player's controls),
   `Collision`, `LapTimer`, `Parallax` and `Snapshot` (publishes the player car).
+  Each component, state and system lives in its own module under `src/ecs/`.
 - `src/track.rs` builds the road and scenery, `src/render.rs` projects and draws it. The road
   trapezoids are filled as scanline rects, since the toolkit has no polygon primitive.
 

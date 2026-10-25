@@ -12,9 +12,10 @@ mod track;
 
 use game_toolkit::prelude::*;
 
+use ecs::{ControlsState, LapsState};
 use ecs::{MainWorldStates, RacerWorld, SystemFactory};
 use music::Music;
-use race::{ControlsState, LapsState, player_z};
+use race::player_z;
 use render::{Renderer, Textures};
 use track::Track;
 

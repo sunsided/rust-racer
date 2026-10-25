@@ -1,0 +1,74 @@
+//! The concrete world type, its command queue, and setting up a race.
+
+use std::convert::Infallible;
+
+use game_toolkit::prelude::*;
+
+use super::*;
+use crate::race::{MAX_SPEED, TOTAL_CARS};
+use crate::track::{SEGMENT_LENGTH, Track, random_side, sprites};
+
+/// The racer has no game-specific world commands.
+type RacerCommand = WorldCommand<Infallible>;
+
+pub type RacerWorld = MainWorld<NoOpPhaseEvents, ChannelQueue<RacerCommand>>;
+
+// Implement the generated command-queue traits on the toolkit's mpsc-backed queue.
+impl WorldUserCommand for ChannelQueue<RacerCommand> {
+    type UserCommand = Infallible;
+}
+impl WorldCommandSender for ChannelQueue<RacerCommand> {
+    type Error = std::sync::mpsc::SendError<RacerCommand>;
+    fn send(&self, command: RacerCommand) -> Result<(), Self::Error> {
+        ChannelQueue::send(self, command)
+    }
+}
+impl WorldCommandReceiver for ChannelQueue<RacerCommand> {
+    type Error = std::sync::mpsc::TryRecvError;
+    fn recv(&self) -> Result<Option<RacerCommand>, Self::Error> {
+        ChannelQueue::try_recv(self)
+    }
+}
+
+impl WorldUserCommandHandler for RacerWorld {
+    fn handle_user_command(&mut self, command: Infallible) {
+        match command {}
+    }
+}
+
+/// Builds the world's states for a race on `track`.
+pub fn race_states(track: Track) -> MainWorldStates {
+    MainWorldStates {
+        traffic_grid: TrafficGridState::new(track.len()),
+        track,
+        ..Default::default()
+    }
+}
+
+/// Puts the player at the start line and scatters the AI cars around the track.
+pub fn spawn_racers(world: &mut RacerWorld, rng: &mut Rng) {
+    world.spawn_player_with(
+        TrackPositionComponent::new(TrackPositionData::default()),
+        SpeedComponent::new(0.0),
+        DriverComponent::new(DriverData::default()),
+        StepOriginComponent::new(0.0),
+    );
+
+    let segments = world.states.track.len();
+    for _ in 0..TOTAL_CARS {
+        let offset = rng.next_f32() * 0.8 * random_side(rng);
+        let z = rng.range_usize(0..segments) as f32 * SEGMENT_LENGTH;
+        let sprite = sprites::CARS[rng.range_usize(0..sprites::CARS.len())];
+        let spread = if sprite == sprites::SEMI { 4.0 } else { 2.0 };
+        let speed = MAX_SPEED / 4.0 + rng.next_f32() * MAX_SPEED / spread;
+        world.spawn_car_with(
+            TrackPositionComponent::new(TrackPositionData {
+                z,
+                offset,
+                percent: 0.0,
+            }),
+            SpeedComponent::new(speed),
+            CarModelComponent::new(sprite),
+        );
+    }
+}
