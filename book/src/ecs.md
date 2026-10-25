@@ -178,13 +178,15 @@ first.
 ## Fencing in the generated code
 
 The generated code is pulled in with `include!` from `OUT_DIR`, and generated code tends to trip
-lints that hand-written code shouldn't (it uses `unsafe` fast paths, as `allow_unsafe: true` in the
-YAML asks it to, and has the usual unused helpers). All four `include!`s live in their own module,
+lints that hand-written code shouldn't (its `unsafe` fast paths, which `allow_unsafe: true` in the
+YAML asks for, call `get_unchecked` without `unsafe {}` blocks, a few constants go unused, and some
+doc links point nowhere). All four `include!`s live in their own module,
 [`src/ecs/generated.rs`](https://github.com/sunsided/rust-racer/blob/main/src/ecs/generated.rs),
 with the lint exemptions on that module only:
 
 ```rust
-#![allow(unsafe_code, unsafe_op_in_unsafe_fn, dead_code, /* ... */)]
+#![allow(unsafe_op_in_unsafe_fn, dead_code)]
+#![allow(rustdoc::broken_intra_doc_links, rustdoc::redundant_explicit_links)]
 
 use super::*;
 
@@ -194,8 +196,10 @@ include!(concat!(env!("OUT_DIR"), "/systems_gen.rs"));
 include!(concat!(env!("OUT_DIR"), "/world_gen.rs"));
 ```
 
-Those exemptions used to sit on the whole `ecs` module, where they also silenced `dead_code` and
-`unsafe_code` in the hand-written systems, which is exactly where you want those lints.
+Keeping them off the parent `ecs` module means `dead_code` and `unsafe_op_in_unsafe_fn` still
+apply to the hand-written systems, which is exactly where you want those lints.
+[#65](https://github.com/sunsided/sillyecs/issues/65) asks for the generated code to carry its own
+allows (and need fewer of them).
 
 The port also turned up three issues in sillyecs 0.0.7, all fixed in 0.1.0: unknown keys in the
 YAML were silently ignored ([#60](https://github.com/sunsided/sillyecs/issues/60)), phase timing
