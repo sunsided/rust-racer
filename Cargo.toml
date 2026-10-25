@@ -8,12 +8,10 @@ license = "EUPL-1.2 OR MIT OR Apache-2.0"
 description = "An OutRun-style pseudo-3D racer, ported from jakesgordon/javascript-racer onto game-toolkit."
 
 [dependencies]
-game-toolkit = { version = "0.4", features = ["ecs"] }
-# Only for `Tween`, to turn the music down on the handle `Audio::play` returns.
-kira = { version = "0.12", default-features = false }
+game-toolkit = { version = "0.5", features = ["ecs"] }
 log = "0.4"
 # Runtime types (`EntityId`, `FrameContext`, ...) and re-exports the generated ECS code uses.
-sillyecs = "0.1.0"
+sillyecs = "0.2.1"
 
 # Native builds log via env_logger; on the web the toolkit logs to the browser console.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -21,10 +19,10 @@ env_logger = "0.11"
 
 # In the browser, time the ECS phases with `performance.now()`; `std::time::Instant` panics there.
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-sillyecs = { version = "0.1.0", features = ["wasm"] }
+sillyecs = { version = "0.2.1", features = ["wasm"] }
 
 [build-dependencies]
-sillyecs-build = "0.1.0"
+sillyecs-build = "0.2.1"
 
 # Decoding the music and pushing ~5k quads a frame is painfully slow unoptimized.
 [profile.dev.package."*"]

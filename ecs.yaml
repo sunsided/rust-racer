@@ -3,6 +3,12 @@
 # Generate the unchecked archetype fast-paths wrapped in `unsafe` blocks.
 allow_unsafe: true
 
+# The component data, states and system data live in (or are re-exported from) `crate::ecs`.
+paths:
+  components: crate::ecs
+  states: crate::ecs
+  systems: crate::ecs
+
 states:
   - name: Track
     description: The road geometry and roadside scenery; never changes during a race.
@@ -47,6 +53,7 @@ phases:
 
 systems:
   - name: Traffic
+    stateless: true
     description: Steers the AI cars around slower traffic and the player, and moves them.
     phase: FixedUpdate
     states:
@@ -60,6 +67,7 @@ systems:
       - TrackPosition
 
   - name: TrafficIndex
+    stateless: true
     description: Buckets the AI cars into their track segments.
     phase: FixedUpdate
     run_after: [Traffic]
@@ -73,6 +81,7 @@ systems:
       - CarModel
 
   - name: Driving
+    stateless: true
     description: Applies the player's controls, the curves' centrifugal force and off-road drag.
     phase: FixedUpdate
     run_after: [TrafficIndex]
@@ -86,6 +95,7 @@ systems:
       - StepOrigin
 
   - name: Collision
+    stateless: true
     description: Stops the player at roadside scenery and behind slower cars.
     phase: FixedUpdate
     run_after: [Driving]
@@ -99,6 +109,7 @@ systems:
       - Speed
 
   - name: LapTimer
+    stateless: true
     description: Times laps as the player crosses the start line.
     phase: FixedUpdate
     run_after: [Collision]
@@ -110,6 +121,7 @@ systems:
       - StepOrigin
 
   - name: Parallax
+    stateless: true
     description: Scrolls the background layers as the player drives through curves.
     phase: FixedUpdate
     run_after: [Collision]
@@ -122,6 +134,7 @@ systems:
       - StepOrigin
 
   - name: Snapshot
+    stateless: true
     description: Publishes the player car's state for the traffic AI and the renderer.
     phase: FixedUpdate
     run_after: [Collision]

@@ -233,14 +233,8 @@ fn blit(
     layer: i16,
     mirror: bool,
 ) {
-    let Some(atlas) = p.texture_size(tex) else {
-        return;
-    };
-    let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]]).with_region(
-        [src.x, src.y],
-        [src.w, src.h],
-        atlas,
-    );
+    let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]])
+        .with_pixel_region([src.x, src.y], [src.w, src.h]);
     let inst = if mirror { inst.flip_x() } else { inst };
     p.sprite_ex(tex, inst, layer, BlendMode::Alpha);
 }

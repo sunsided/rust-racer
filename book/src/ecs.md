@@ -7,12 +7,12 @@ background. It's perfectly readable, and the first version of this port kept tha
 [sillyecs](https://github.com/sunsided/sillyecs) world, split into seven systems. Is an
 entity-component system for 201 cars slightly overkill? Yes. It does make every bit of shared state
 and every dependency between the steps explicit, and that's the part this chapter is
-about. Mostly, though, I wanted a real game to put sillyecs through its paces, and the three issues
-it turned up say it was worth it.
+about. Mostly, though, I wanted a real game to put sillyecs through its paces, and the issues it
+turned up say it was worth it.
 
 ## The world is a YAML file
 
-sillyecs doesn't use macros or runtime registration. You describe the world in
+sillyecs doesn't use derive macros or runtime registration. You describe the world in
 [`ecs.yaml`](https://github.com/sunsided/rust-racer/blob/main/ecs.yaml), and `build.rs` generates
 the world, the archetype storage and the system traits from it:
 
@@ -144,7 +144,16 @@ macro_rules! stateless_systems {
 }
 ```
 
-([`src/ecs/systems.rs`](https://github.com/sunsided/rust-racer/blob/main/src/ecs/systems.rs))
+([`src/ecs/systems.rs`](https://github.com/sunsided/rust-racer/blob/58132f367092f8f31fee0d00bd8de73f0e6aa834/src/ecs/systems.rs))
+
+**Update:** The macro is gone. sillyecs 0.2 handles stateless systems itself
+([#64](https://github.com/sunsided/sillyecs/issues/64)): a system marked `stateless: true` in the
+YAML gets its empty data type and a `CreateSystem` impl that works with any factory, so with all
+seven marked, the factory is `&()`:
+
+```rust
+let mut world = RacerWorld::new(&(), states, ChannelQueue::new());
+```
 
 ## The step origin
 
@@ -181,7 +190,7 @@ The generated code is pulled in with `include!` from `OUT_DIR`, and generated co
 lints that hand-written code shouldn't (its `unsafe` fast paths, which `allow_unsafe: true` in the
 YAML asks for, call `get_unchecked` without `unsafe {}` blocks, a few constants go unused, and some
 doc links point nowhere). All four `include!`s live in their own module,
-[`src/ecs/generated.rs`](https://github.com/sunsided/rust-racer/blob/main/src/ecs/generated.rs),
+[`src/ecs/generated.rs`](https://github.com/sunsided/rust-racer/blob/58132f367092f8f31fee0d00bd8de73f0e6aa834/src/ecs/generated.rs),
 with the lint exemptions on that module only:
 
 ```rust
@@ -200,6 +209,22 @@ Keeping them off the parent `ecs` module means `dead_code` and `unsafe_op_in_uns
 apply to the hand-written systems, which is exactly where you want those lints.
 [#65](https://github.com/sunsided/sillyecs/issues/65) asks for the generated code to carry its own
 allows (and need fewer of them).
+
+**Update:** With sillyecs 0.2, the fence came down as well. The generated items carry their own
+allows now (#65 again), `paths:` in the YAML tells the generated code where the racer's types live,
+and `sillyecs::include_ecs!` declares the module
+([#68](https://github.com/sunsided/sillyecs/issues/68)), so `generated.rs` is deleted and
+[`src/ecs.rs`](https://github.com/sunsided/rust-racer/blob/main/src/ecs.rs) has:
+
+```rust
+sillyecs::include_ecs!(
+    /// The code sillyecs generates from `ecs.yaml` (see `build.rs`).
+    mod generated
+);
+```
+
+The hand-written systems still get `dead_code` and `unsafe_op_in_unsafe_fn`, which was the point of
+the fence in the first place.
 
 The port also turned up three issues in sillyecs 0.0.7, all fixed in 0.1.0: unknown keys in the
 YAML were silently ignored ([#60](https://github.com/sunsided/sillyecs/issues/60)), phase timing

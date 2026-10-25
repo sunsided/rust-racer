@@ -13,7 +13,7 @@ mod track;
 use game_toolkit::prelude::*;
 
 use ecs::{ControlsState, LapsState};
-use ecs::{MainWorldStates, RacerWorld, SystemFactory};
+use ecs::{MainWorldStates, RacerWorld};
 use music::Music;
 use race::player_z;
 use render::{Renderer, Textures};
@@ -35,7 +35,7 @@ impl Game for Racer {
 
         let track = Track::build(&mut ctx.rng, player_z());
         let states = ecs::race_states(track);
-        let mut world = RacerWorld::new(&SystemFactory, states, ChannelQueue::new());
+        let mut world = RacerWorld::new(&(), states, ChannelQueue::new());
         ecs::spawn_racers(&mut world, &mut ctx.rng);
 
         let music = Music::load(ctx)?;
@@ -55,7 +55,6 @@ impl Game for Racer {
         if ctx.input.key_pressed(Key::KeyM) {
             self.music.toggle_mute();
         }
-        self.music.update(ctx);
 
         self.world.states.controls = read_input(&ctx.input);
         // Runs the FixedUpdate phase as many times as the elapsed real time allows.

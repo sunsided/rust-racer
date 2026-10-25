@@ -9,18 +9,16 @@
 //!   the player car for the next step's traffic AI and the renderer.
 
 mod components;
-mod generated;
 mod states;
 mod systems;
 mod world;
 
+sillyecs::include_ecs!(
+    /// The code sillyecs generates from `ecs.yaml` (see `build.rs`).
+    mod generated
+);
+
 pub use components::*;
 pub use generated::*;
 pub use states::*;
-pub use systems::SystemFactory;
-// The generated systems wrap these.
-use systems::{
-    CollisionSystemData, DrivingSystemData, LapTimerSystemData, ParallaxSystemData,
-    SnapshotSystemData, TrafficIndexSystemData, TrafficSystemData,
-};
 pub use world::{RacerWorld, race_states, spawn_racers};

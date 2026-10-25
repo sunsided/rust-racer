@@ -13,23 +13,6 @@ type RacerCommand = WorldCommand<Infallible>;
 
 pub type RacerWorld = MainWorld<NoOpPhaseEvents, ChannelQueue<RacerCommand>>;
 
-// Implement the generated command-queue traits on the toolkit's mpsc-backed queue.
-impl WorldUserCommand for ChannelQueue<RacerCommand> {
-    type UserCommand = Infallible;
-}
-impl WorldCommandSender for ChannelQueue<RacerCommand> {
-    type Error = std::sync::mpsc::SendError<RacerCommand>;
-    fn send(&self, command: RacerCommand) -> Result<(), Self::Error> {
-        ChannelQueue::send(self, command)
-    }
-}
-impl WorldCommandReceiver for ChannelQueue<RacerCommand> {
-    type Error = std::sync::mpsc::TryRecvError;
-    fn recv(&self) -> Result<Option<RacerCommand>, Self::Error> {
-        ChannelQueue::try_recv(self)
-    }
-}
-
 impl WorldUserCommandHandler for RacerWorld {
     fn handle_user_command(&mut self, command: Infallible) {
         match command {}
