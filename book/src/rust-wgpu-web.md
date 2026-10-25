@@ -45,29 +45,29 @@ is batched and flushed to wgpu when it drops. The racer needs four of its calls:
 - `clear` for the sky color,
 - `quad` for the road's trapezoids (four arbitrary corners, one color, a layer),
 - `sprite_ex` for everything textured, with a `SpriteInstance` built from a destination rectangle,
-  an atlas region (`with_region`) and optional mirroring (`flip_x`),
+  an atlas region (`with_pixel_region`) and optional mirroring (`flip_x`),
 - `rect_ex` and `text` for the HUD.
 
 The canvas had one rule for draw order (last one wins); a batching GPU renderer has more, and they're
 what the [layers](drawing.md#why-call-order-still-matters) are for. The other difference is texture
 coordinates: the original's `drawImage` takes pixel rectangles, while a GPU sprite wants normalized
 UVs. The atlas rectangles stay in pixels in the code (they're copied from Jake's sprite sheet layout
-as is), and `with_region` takes the atlas's size from `Painter::texture_size` to do the division:
+as is), and `with_pixel_region` leaves the division to the painter, which knows the atlas's size
+when `sprite_ex` draws the sprite:
 
 ```rust
-let Some(atlas) = p.texture_size(tex) else {
-    return;
-};
 let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]])
-    .with_region([src.x, src.y], [src.w, src.h], atlas);
+    .with_pixel_region([src.x, src.y], [src.w, src.h]);
 let inst = if mirror { inst.flip_x() } else { inst };
 p.sprite_ex(tex, inst, layer, BlendMode::Alpha);
 ```
 
 ([`src/render.rs`](https://github.com/sunsided/rust-racer/blob/main/src/render.rs))
 
-Before game-toolkit 0.4 had those helpers, the atlas sizes were hard-coded constants in the racer,
-which works right up until somebody re-exports the sprite sheet.
+Before game-toolkit 0.4 had atlas helpers, the atlas sizes were hard-coded constants in the racer,
+which works right up until somebody re-exports the sprite sheet. 0.4's `with_region` still wanted
+the size passed in, looked up with `Painter::texture_size`; `with_pixel_region` arrived in 0.5
+([#41](https://github.com/sunsided/game-toolkit/issues/41)).
 
 The scene is redrawn from scratch each frame: no retained geometry, no vertex buffers that
 survive the frame on the game's side. For a game made of a few thousand quads that's the simplest
@@ -83,19 +83,24 @@ the systems. The systems never see a key code.
 ## Music
 
 The music is Jake's, played through kira, and it comes with one line of folklore. The original sets its
-volume to 5 %, next to the comment "shhhh! annoying music!", and 5 % amplitude is
-\\(20 \log_{10} 0.05 \approx -26\\) dB:
+volume to 5 %, next to the comment "shhhh! annoying music!", and the port does the same:
 
 ```rust
-/// The original plays its music at 5% volume ("shhhh! annoying music!"): -26 dB.
-const VOLUME_DB: f32 = -26.0;
+/// The original plays its music at 5% volume ("shhhh! annoying music!").
+const VOLUME: f32 = 0.05;
 ```
 
 ([`src/music.rs`](https://github.com/sunsided/rust-racer/blob/main/src/music.rs))
 
-The `Music` type restarts the track whenever it has stopped (that's the looping), pauses and resumes it
-on M, and copes with there being no audio device at all, in which case `ctx.audio` is `None` and the
-game is simply silent.
+`Music::load` starts the track once, with `PlayOptions::looped().volume(VOLUME).deferred()`, and keeps
+the `SoundHandle` to pause and resume it on M. It copes with there being no audio device at all, in
+which case `ctx.audio` is `None` and the game is simply silent.
+
+On game-toolkit 0.4, this took more work: `play` returned kira's own handle, so the racer depended on
+kira directly, set the volume in decibels (5 % amplitude is \\(20 \log_{10} 0.05 \approx -26\\) dB),
+and looped the music by checking every frame whether it had stopped and playing it again. 0.5's
+`SoundHandle` and `PlayOptions` ([#38](https://github.com/sunsided/game-toolkit/issues/38)) made all of
+that one call.
 
 ## The browser build
 
@@ -117,11 +122,13 @@ things:
   with it. Its `wasm` feature switches to `performance.now()`, enabled only for that target:
   ```toml
   [target.'cfg(target_arch = "wasm32")'.dependencies]
-  sillyecs = { version = "0.1.0", features = ["wasm"] }
+  sillyecs = { version = "0.2.1", features = ["wasm"] }
   ```
 - Browsers keep audio suspended until the first user gesture. The first version took the
-  resulting error from `play` for a missing audio device and gave up on the music for good; now
-  `Music::update` waits for `Audio::is_started()` before it tries.
+  resulting error from `play` for a missing audio device and gave up on the music for good; the
+  fix was to wait for `Audio::is_started()` before trying. Since game-toolkit 0.5, the error is
+  its own `AudioError::NotStarted`, and a `deferred` play is queued until the gesture
+  ([#39](https://github.com/sunsided/game-toolkit/issues/39)), which is what the racer uses now.
 - `env_logger` is a native-only dependency; on the web, the toolkit logs to the browser
   console.
 

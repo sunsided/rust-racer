@@ -11,31 +11,7 @@ use crate::track::{SEGMENT_LENGTH, Track, random_side, sprites};
 /// The racer has no game-specific world commands.
 type RacerCommand = WorldCommand<Infallible>;
 
-pub type RacerWorld = MainWorld<NoOpPhaseEvents, CommandQueue>;
-
-/// The world's command queue: the toolkit's mpsc-backed `ChannelQueue`, implementing sillyecs'
-/// queue traits. A newer game-toolkit implements them on `ChannelQueue` itself
-/// (sunsided/game-toolkit#61); until it's released, this wrapper bridges the gap.
-#[derive(Default)]
-pub struct CommandQueue(ChannelQueue<RacerCommand>);
-
-impl sillyecs::CommandSender for CommandQueue {
-    type Command = RacerCommand;
-    type Error = std::sync::mpsc::SendError<RacerCommand>;
-
-    fn send(&self, command: RacerCommand) -> Result<(), Self::Error> {
-        self.0.send(command)
-    }
-}
-
-impl sillyecs::CommandReceiver for CommandQueue {
-    type Command = RacerCommand;
-    type Error = std::sync::mpsc::TryRecvError;
-
-    fn recv(&self) -> Result<Option<RacerCommand>, Self::Error> {
-        self.0.try_recv()
-    }
-}
+pub type RacerWorld = MainWorld<NoOpPhaseEvents, ChannelQueue<RacerCommand>>;
 
 impl WorldUserCommandHandler for RacerWorld {
     fn handle_user_command(&mut self, command: Infallible) {

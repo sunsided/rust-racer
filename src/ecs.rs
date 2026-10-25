@@ -21,4 +21,4 @@ sillyecs::include_ecs!(
 pub use components::*;
 pub use generated::*;
 pub use states::*;
-pub use world::{CommandQueue, RacerWorld, race_states, spawn_racers};
+pub use world::{RacerWorld, race_states, spawn_racers};

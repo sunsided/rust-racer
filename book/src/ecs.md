@@ -152,7 +152,7 @@ YAML gets its empty data type and a `CreateSystem` impl that works with any fact
 seven marked, the factory is `&()`:
 
 ```rust
-let mut world = RacerWorld::new(&(), states, CommandQueue::default());
+let mut world = RacerWorld::new(&(), states, ChannelQueue::new());
 ```
 
 ## The step origin

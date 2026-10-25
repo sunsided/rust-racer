@@ -873,9 +873,9 @@ dependencies = [
 
 [[package]]
 name = "game-toolkit"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f4a3bd8ef43d36068b9a60062cf8d56bc26e836d2a923701a1093db02548231"
+checksum = "c58ff9c67a2166e717490b77247fc09064b72d1f8f1155dfcd0e5ca86e93fba9"
 dependencies = [
  "anyhow",
  "game-toolkit-assets",
@@ -889,9 +889,9 @@ dependencies = [
 
 [[package]]
 name = "game-toolkit-assets"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "003e7934eda52ab89adb4bc1ae1ecf8a95c2deb422748b7f91e6cde237830658"
+checksum = "2429db3551dfbca8ad8c845c015141a12180111ff55dce84921f8b93ad428905"
 dependencies = [
  "anyhow",
  "js-sys",
@@ -904,9 +904,9 @@ dependencies = [
 
 [[package]]
 name = "game-toolkit-audio"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c61eacfd6b2e1da93c4d4ec5b046b3f7b7952954d0f2b678b27af86da149c5bf"
+checksum = "6c7ecb2048286b74d7051f590d94144caf273111f734802959f68db0ca2c7cf2"
 dependencies = [
  "anyhow",
  "kira",
@@ -915,9 +915,9 @@ dependencies = [
 
 [[package]]
 name = "game-toolkit-core"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31e38c5e88029d304a9e4fc5ee70a1a1171afcf54fa0200a73f0995e65cdcc15"
+checksum = "fe863d36968e48f0167200cba08f203005bc180e9b453fe7e282d44efc37c29f"
 dependencies = [
  "anyhow",
  "game-toolkit-assets",
@@ -936,15 +936,18 @@ dependencies = [
 
 [[package]]
 name = "game-toolkit-ecs"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0eafafbf85a8ee04669099c063ec57f168e328878d0cabcf1abc6dac48249a7a"
+checksum = "de1fd0dc3de539ac4252bc8810f5b048ce72f539918d55f4aa38a6eee5409c93"
+dependencies = [
+ "sillyecs",
+]
 
 [[package]]
 name = "game-toolkit-gfx"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84cc1cb0db956eee3bf5d7deea705e9b96bd10b3fd4240c9296c43d3f98c7173"
+checksum = "4bb252da338ef5946b010585a058780678081e5cfe43d5cfb1e92f3b14628029"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -958,9 +961,9 @@ dependencies = [
 
 [[package]]
 name = "game-toolkit-input"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "167da6bcd9b5ae5409fc2717f83539a495368ce57896d3890f80926ab04843ed"
+checksum = "6847da21ad7d6e54d3ff220709642b1307ee5010675d263969e57217dc027708"
 dependencies = [
  "gilrs",
  "log",
@@ -2481,7 +2484,6 @@ version = "0.2.0"
 dependencies = [
  "env_logger",
  "game-toolkit",
- "kira",
  "log",
  "sillyecs",
  "sillyecs-build",
