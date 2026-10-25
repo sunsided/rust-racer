@@ -1513,18 +1513,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "memo-map"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5449c8c750f1a07ea702bbd212bd999fceece9b3d1508b17023b3e174583124b"
-
-[[package]]
 name = "minijinja"
-version = "2.24.0"
+version = "3.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86886cf6dbf4e614b19c9a1eec9775f021869d7eadde0fc73921a81b90c9b4c9"
+checksum = "90086695417a271bc96e6cb50618555614ca48fa3bb0d9aa96e3468b0f84431e"
 dependencies = [
- "memo-map",
  "serde",
 ]
 
@@ -2490,6 +2483,7 @@ dependencies = [
  "log",
  "rayon",
  "sillyecs",
+ "sillyecs-build",
  "tracing",
 ]
 
@@ -2655,9 +2649,15 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "sillyecs"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffa6f63d9cfc6e926ab53d1102e8d911c5fe81eaff95d2ad89938042fc36e15d"
+checksum = "2642eb11a76950c6d2d13bec890bce7918c83e4564a3e475c4eaef71696b76d3"
+
+[[package]]
+name = "sillyecs-build"
+version = "0.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d686eceba9e1485684a82f1983579196f9ec5d2630c8bbdf0e850e67f4a94454"
 dependencies = [
  "minijinja",
  "serde",

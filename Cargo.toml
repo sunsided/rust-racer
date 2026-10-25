@@ -13,6 +13,8 @@ kira = { version = "0.12", default-features = false }
 log = "0.4"
 # The generated ECS code logs via tracing and offers a rayon-parallel phase runner.
 rayon = "1"
+# Runtime types (`EntityId`, `FrameContext`, ...) the generated ECS code refers to.
+sillyecs = "0.0.7"
 tracing = "0.1"
 
 # Native builds log via env_logger; on the web the toolkit logs to the browser console.
@@ -20,7 +22,7 @@ tracing = "0.1"
 env_logger = "0.11"
 
 [build-dependencies]
-sillyecs = "0.0.6"
+sillyecs-build = "0.0.7"
 
 # Decoding the music and pushing ~5k quads a frame is painfully slow unoptimized.
 [profile.dev.package."*"]

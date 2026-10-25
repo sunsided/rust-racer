@@ -13,6 +13,7 @@
     mismatched_lifetime_syntaxes,
     elided_lifetimes_in_paths,
     unused_qualifications,
+    unreachable_patterns,
     dead_code
 )]
 #![allow(
@@ -41,19 +42,31 @@ include!(concat!(env!("OUT_DIR"), "/archetypes_gen.rs"));
 include!(concat!(env!("OUT_DIR"), "/systems_gen.rs"));
 include!(concat!(env!("OUT_DIR"), "/world_gen.rs"));
 
-pub type RacerWorld = MainWorld<NoOpPhaseEvents, ChannelQueue<WorldCommand>>;
+/// The racer has no game-specific world commands.
+type RacerCommand = WorldCommand<Infallible>;
+
+pub type RacerWorld = MainWorld<NoOpPhaseEvents, ChannelQueue<RacerCommand>>;
 
 // Implement the generated command-queue traits on the toolkit's mpsc-backed queue.
-impl WorldCommandSender for ChannelQueue<WorldCommand> {
-    type Error = std::sync::mpsc::SendError<WorldCommand>;
-    fn send(&self, command: WorldCommand) -> Result<(), Self::Error> {
+impl WorldUserCommand for ChannelQueue<RacerCommand> {
+    type UserCommand = Infallible;
+}
+impl WorldCommandSender for ChannelQueue<RacerCommand> {
+    type Error = std::sync::mpsc::SendError<RacerCommand>;
+    fn send(&self, command: RacerCommand) -> Result<(), Self::Error> {
         ChannelQueue::send(self, command)
     }
 }
-impl WorldCommandReceiver for ChannelQueue<WorldCommand> {
+impl WorldCommandReceiver for ChannelQueue<RacerCommand> {
     type Error = std::sync::mpsc::TryRecvError;
-    fn recv(&self) -> Result<Option<WorldCommand>, Self::Error> {
+    fn recv(&self) -> Result<Option<RacerCommand>, Self::Error> {
         ChannelQueue::try_recv(self)
+    }
+}
+
+impl WorldUserCommandHandler for RacerWorld {
+    fn handle_user_command(&mut self, command: Infallible) {
+        match command {}
     }
 }
 

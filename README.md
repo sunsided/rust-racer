@@ -20,7 +20,7 @@ Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
 - `src/track.rs` builds the road and scenery, `src/render.rs` projects and draws it. The road
   trapezoids are filled as scanline rects, since the toolkit has no polygon primitive.
 
-Native only: the code sillyecs 0.0.6 generates uses `std::time::Instant`, which panics in the
+Native only: the code sillyecs 0.0.7 generates uses `std::time::Instant`, which panics in the
 browser.
 
 ## Credits

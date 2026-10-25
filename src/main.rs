@@ -14,7 +14,7 @@ use kira::Tween;
 use kira::sound::PlaybackState;
 use kira::sound::static_sound::StaticSoundHandle;
 
-use ecs::{RacerWorld, SystemFactory};
+use ecs::{MainWorldStates, RacerWorld, SystemFactory};
 use race::{DriverInput, LapTimes, RaceState, player_z};
 use render::{Renderer, Textures};
 use track::Track;
@@ -38,8 +38,10 @@ impl Game for Racer {
         };
 
         let track = Track::build(&mut ctx.rng, player_z());
-        let race = RaceState::new(track);
-        let mut world = RacerWorld::new(&SystemFactory, race, ChannelQueue::new());
+        let states = MainWorldStates {
+            race: RaceState::new(track),
+        };
+        let mut world = RacerWorld::new(&SystemFactory, states, ChannelQueue::new());
         ecs::spawn_racers(&mut world, &mut ctx.rng);
 
         let music = Music {

@@ -48,7 +48,7 @@ systems:
     run_after: [Traffic]
     states:
       - use: Race
-        write: true
+        default: write
     inputs:
       - TrackPosition
       - Speed
@@ -59,7 +59,7 @@ systems:
     run_after: [TrafficIndex]
     states:
       - use: Race
-        write: true
+        default: write
     outputs:
       - TrackPosition
       - Speed
