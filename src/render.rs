@@ -157,6 +157,9 @@ impl Renderer {
                     + scale * car.offset * ROAD_WIDTH * width / 2.0;
                 let y = interpolate(view.p1.y, view.p2.y, car.percent);
                 let anchor = [-0.5, -1.0];
+                // The car art shows the rear and right flank, as seen when the car is to our
+                // left; mirror it when the car is to our right.
+                let mirror = x > width / 2.0;
                 draw_sprite(
                     p,
                     tex,
@@ -166,6 +169,7 @@ impl Renderer {
                     [x, y],
                     anchor,
                     Some(view.clip),
+                    mirror,
                 );
             }
 
@@ -183,6 +187,7 @@ impl Renderer {
                     pos,
                     anchor,
                     Some(view.clip),
+                    false,
                 );
             }
 
@@ -194,7 +199,7 @@ impl Renderer {
                 let bounce = bounce * random_side(rng);
                 let sprite = player_sprite(player.steer, player.updown);
                 let pos = [width / 2.0, y + bounce];
-                draw_sprite(p, tex, width, sprite, scale, pos, [-0.5, -1.0], None);
+                draw_sprite(p, tex, width, sprite, scale, pos, [-0.5, -1.0], None, false);
             }
         }
     }
@@ -217,7 +222,8 @@ fn exponential_fog(distance: f32, density: f32) -> f32 {
     1.0 / (distance * distance * density).exp()
 }
 
-/// Draws the atlas region `src` (`x, y, w, h` in pixels) into the screen rect `dst`.
+/// Draws the atlas region `src` (`x, y, w, h` in pixels) into the screen rect `dst`,
+/// horizontally flipped if `mirror` is set.
 fn blit(
     p: &mut Painter<'_>,
     tex: TextureId,
@@ -225,10 +231,15 @@ fn blit(
     src: AtlasRect,
     dst: [f32; 4],
     layer: i16,
+    mirror: bool,
 ) {
     let [aw, ah] = atlas;
-    let uv_min = [src.x / aw, src.y / ah];
-    let uv_max = [(src.x + src.w) / aw, (src.y + src.h) / ah];
+    let (mut left, mut right) = (src.x / aw, (src.x + src.w) / aw);
+    if mirror {
+        std::mem::swap(&mut left, &mut right);
+    }
+    let uv_min = [left, src.y / ah];
+    let uv_max = [right, (src.y + src.h) / ah];
     let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]]).with_uv(uv_min, uv_max);
     p.sprite_ex(tex, inst, layer, BlendMode::Alpha);
 }
@@ -265,6 +276,7 @@ fn draw_backdrop(
         src,
         [0.0, offset, dest_w, height],
         BACKGROUND_LAYER,
+        false,
     );
     if source_w < image_w {
         let src = AtlasRect {
@@ -272,7 +284,7 @@ fn draw_backdrop(
             ..layer
         };
         let dst = [dest_w - 1.0, offset, width - dest_w, height];
-        blit(p, tex, BACKGROUND_ATLAS, src, dst, BACKGROUND_LAYER);
+        blit(p, tex, BACKGROUND_ATLAS, src, dst, BACKGROUND_LAYER, false);
     }
 }
 
@@ -328,7 +340,7 @@ fn draw_segment(
 }
 
 /// Draws a sprite scaled by the projection, anchored by `anchor` (fractions of its size added
-/// to `pos`), and cut off below `clip_y` where hills in front hide it.
+/// to `pos`), cut off below `clip_y` where hills in front hide it, and optionally mirrored.
 #[allow(clippy::too_many_arguments)]
 fn draw_sprite(
     p: &mut Painter<'_>,
@@ -339,6 +351,7 @@ fn draw_sprite(
     pos: [f32; 2],
     anchor: [f32; 2],
     clip_y: Option<f32>,
+    mirror: bool,
 ) {
     let world = scale * width / 2.0 * (sprites::SCALE * ROAD_WIDTH);
     let dest_w = sprite.w * world;
@@ -355,5 +368,5 @@ fn draw_sprite(
         ..sprite
     };
     let dst = [dest_x, dest_y, dest_w, dest_h - clip_h];
-    blit(p, tex.sprites, SPRITE_ATLAS, src, dst, SPRITE_LAYER);
+    blit(p, tex.sprites, SPRITE_ATLAS, src, dst, SPRITE_LAYER, mirror);
 }
