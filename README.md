@@ -4,6 +4,9 @@ An OutRun-style pseudo-3D racer: a Rust port of Jake Gordon's
 [javascript-racer](https://github.com/jakesgordon/javascript-racer) (v4, "final") built on
 [game-toolkit](https://github.com/sunsided/game-toolkit), with the simulation running in a
 [sillyecs](https://github.com/sunsided/sillyecs) world.
+[Play it in the browser.](https://sunsided.github.io/rust-racer/)
+
+![Driving through a curve past billboards, with traffic ahead](docs/screenshot.png)
 
 ```sh
 cargo run --release
