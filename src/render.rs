@@ -1,8 +1,9 @@
 //! Pseudo-3D rendering: parallax background, the road drawn front to back, then sprites and
 //! the player back to front.
 //!
-//! The toolkit batches quads per layer, so the road trapezoids are filled as one-pixel-high
-//! scanline rects. Layers keep the passes ordered; within a layer, draw order is preserved.
+//! Layers keep the passes ordered. The road is drawn as plain filled quads, which keep their
+//! call order within the road layer, so farther segments paint over nearer ones like on the
+//! original's canvas.
 
 use game_toolkit::prelude::*;
 
@@ -18,7 +19,6 @@ pub const HUD_LAYER: i16 = 3;
 pub struct Textures {
     pub background: TextureId,
     pub sprites: TextureId,
-    pub white: TextureId,
 }
 
 /// A track point projected onto the screen.
@@ -143,7 +143,7 @@ impl Renderer {
             }
 
             let fog = exponential_fog(n as f32 / DRAW_DISTANCE as f32, FOG_DENSITY);
-            draw_segment(p, tex.white, width, height, &view, fog, &segment.color);
+            draw_segment(p, width, &view, fog, &segment.color);
             max_y = view.p1.y;
         }
 
@@ -228,26 +228,30 @@ fn exponential_fog(distance: f32, density: f32) -> f32 {
 fn blit(
     p: &mut Painter<'_>,
     tex: TextureId,
-    atlas: [f32; 2],
     src: AtlasRect,
     dst: [f32; 4],
     layer: i16,
     mirror: bool,
 ) {
-    let [aw, ah] = atlas;
-    let (mut left, mut right) = (src.x / aw, (src.x + src.w) / aw);
-    if mirror {
-        std::mem::swap(&mut left, &mut right);
-    }
-    let uv_min = [left, src.y / ah];
-    let uv_max = [right, (src.y + src.h) / ah];
-    let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]]).with_uv(uv_min, uv_max);
+    let Some(atlas) = p.texture_size(tex) else {
+        return;
+    };
+    let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]]).with_region(
+        [src.x, src.y],
+        [src.w, src.h],
+        atlas,
+    );
+    let inst = if mirror { inst.flip_x() } else { inst };
     p.sprite_ex(tex, inst, layer, BlendMode::Alpha);
 }
 
-fn fill(p: &mut Painter<'_>, white: TextureId, dst: [f32; 4], color: [f32; 4]) {
-    let inst = SpriteInstance::at([dst[0], dst[1]], [dst[2], dst[3]]).with_color(color);
-    p.sprite_ex(white, inst, ROAD_LAYER, BlendMode::Alpha);
+/// A filled trapezoid between a horizontal span at `near` and one at `far` (`[x_center,
+/// half_width, y]` each).
+fn trapezoid(p: &mut Painter<'_>, near: [f32; 3], far: [f32; 3], color: [f32; 4]) {
+    let [x1, w1, y1] = near;
+    let [x2, w2, y2] = far;
+    let corners = [[x1 - w1, y1], [x1 + w1, y1], [x2 + w2, y2], [x2 - w2, y2]];
+    p.quad(corners, color, ROAD_LAYER);
 }
 
 /// One parallax background layer, scrolled horizontally by `rotation` (`0..1`) and
@@ -270,73 +274,51 @@ fn draw_backdrop(
         w: source_w,
         ..layer
     };
-    blit(
-        p,
-        tex,
-        BACKGROUND_ATLAS,
-        src,
-        [0.0, offset, dest_w, height],
-        BACKGROUND_LAYER,
-        false,
-    );
+    let dst = [0.0, offset, dest_w, height];
+    blit(p, tex, src, dst, BACKGROUND_LAYER, false);
     if source_w < image_w {
         let src = AtlasRect {
             w: image_w - source_w,
             ..layer
         };
         let dst = [dest_w - 1.0, offset, width - dest_w, height];
-        blit(p, tex, BACKGROUND_ATLAS, src, dst, BACKGROUND_LAYER, false);
+        blit(p, tex, src, dst, BACKGROUND_LAYER, false);
     }
 }
 
-fn draw_segment(
-    p: &mut Painter<'_>,
-    white: TextureId,
-    width: f32,
-    height: f32,
-    view: &SegmentView,
-    fog: f32,
-    color: &Palette,
-) {
+fn draw_segment(p: &mut Painter<'_>, width: f32, view: &SegmentView, fog: f32, color: &Palette) {
     let (near, far) = (&view.p1, &view.p2);
-    let top = far.y.max(0.0);
-    let bottom = near.y.min(height);
-    if bottom <= top {
-        return;
-    }
-    fill(p, white, [0.0, top, width, bottom - top], color.grass);
+    // The full-width band of grass (and fog) behind the road.
+    let half = width / 2.0;
+    let (band_near, band_far) = ([half, half, near.y], [half, half, far.y]);
+    trapezoid(p, band_near, band_far, color.grass);
 
     let rumble = |w: f32| w / (2.0 * LANES as f32).max(6.0);
     let lane_marker = |w: f32| w / (8.0 * LANES as f32).max(32.0);
 
-    // Scanline-fill the trapezoids, sampling the edges at each row's center.
-    let mut row = top.floor();
-    while row < bottom {
-        let t = ((row + 0.5 - far.y) / (near.y - far.y)).clamp(0.0, 1.0);
-        let x = interpolate(far.x, near.x, t);
-        let w = interpolate(far.w, near.w, t);
-        let r = interpolate(rumble(far.w), rumble(near.w), t);
-        fill(p, white, [x - w - r, row, 2.0 * (w + r), 1.0], color.rumble);
-        fill(p, white, [x - w, row, 2.0 * w, 1.0], color.road);
-        if let Some(lane) = color.lane {
-            let l = interpolate(lane_marker(far.w), lane_marker(near.w), t);
-            let lane_w = w * 2.0 / LANES as f32;
-            for k in 1..LANES {
-                let lane_x = x - w + lane_w * k as f32;
-                fill(p, white, [lane_x - l / 2.0, row, l, 1.0], lane);
-            }
+    // The rumble strips are a wider trapezoid under the road.
+    let edge = |pt: &Projected| [pt.x, pt.w + rumble(pt.w), pt.y];
+    trapezoid(p, edge(near), edge(far), color.rumble);
+    let road = |pt: &Projected| [pt.x, pt.w, pt.y];
+    trapezoid(p, road(near), road(far), color.road);
+
+    if let Some(lane) = color.lane {
+        let marker = |pt: &Projected, k: usize| {
+            let lane_w = pt.w * 2.0 / LANES as f32;
+            [
+                pt.x - pt.w + lane_w * k as f32,
+                lane_marker(pt.w) / 2.0,
+                pt.y,
+            ]
+        };
+        for k in 1..LANES {
+            trapezoid(p, marker(near, k), marker(far, k), lane);
         }
-        row += 1.0;
     }
 
     if fog < 1.0 {
         let [r, g, b, _] = FOG_COLOR;
-        fill(
-            p,
-            white,
-            [0.0, top, width, bottom - top],
-            [r, g, b, 1.0 - fog],
-        );
+        trapezoid(p, band_near, band_far, [r, g, b, 1.0 - fog]);
     }
 }
 
@@ -369,5 +351,5 @@ fn draw_sprite(
         ..sprite
     };
     let dst = [dest_x, dest_y, dest_w, dest_h - clip_h];
-    blit(p, tex.sprites, SPRITE_ATLAS, src, dst, SPRITE_LAYER, mirror);
+    blit(p, tex.sprites, src, dst, SPRITE_LAYER, mirror);
 }

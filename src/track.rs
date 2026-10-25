@@ -25,14 +25,9 @@ const fn rect(x: f32, y: f32, w: f32, h: f32) -> AtlasRect {
     AtlasRect { x, y, w, h }
 }
 
-/// Size of `assets/background.png`.
-pub const BACKGROUND_ATLAS: [f32; 2] = [1290.0, 1470.0];
 pub const HILLS: AtlasRect = rect(5.0, 5.0, 1280.0, 480.0);
 pub const SKY: AtlasRect = rect(5.0, 495.0, 1280.0, 480.0);
 pub const TREES: AtlasRect = rect(5.0, 985.0, 1280.0, 480.0);
-
-/// Size of `assets/sprites.png`.
-pub const SPRITE_ATLAS: [f32; 2] = [1492.0, 1487.0];
 
 pub mod sprites {
     use super::{AtlasRect, rect};

@@ -23,8 +23,8 @@ Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
   `TrafficIndex` (buckets cars into segments), `Driving` (the player's controls),
   `Collision`, `LapTimer`, `Parallax` and `Snapshot` (publishes the player car).
   Each component, state and system lives in its own module under `src/ecs/`.
-- `src/track.rs` builds the road and scenery, `src/render.rs` projects and draws it. The road
-  trapezoids are filled as scanline rects, since the toolkit has no polygon primitive.
+- `src/track.rs` builds the road and scenery, `src/render.rs` projects and draws it, the road
+  as filled quads.
 
 In the browser: `task web` serves a live-rebuilding build at http://localhost:8080, and
 `PROFILE=release task web:build` builds into `dist/`. Both need `trunk`

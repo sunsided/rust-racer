@@ -31,7 +31,6 @@ impl Game for Racer {
         let textures = Textures {
             background: ctx.load_texture("background.png")?,
             sprites: ctx.load_texture("sprites.png")?,
-            white: ctx.gfx.white_texture(),
         };
 
         let track = Track::build(&mut ctx.rng, player_z());
@@ -77,7 +76,7 @@ impl Game for Racer {
         let mut p = frame.painter(&mut ctx.gfx);
         self.renderer
             .draw(&mut p, &self.textures, states, size, &mut ctx.rng);
-        draw_hud(&mut p, self.textures.white, states, size[0]);
+        draw_hud(&mut p, states, size[0]);
     }
 }
 
@@ -99,14 +98,20 @@ fn read_input(input: &Input) -> ControlsState {
     controls
 }
 
-fn draw_hud(p: &mut Painter<'_>, white: TextureId, states: &MainWorldStates, width: f32) {
+fn draw_hud(p: &mut Painter<'_>, states: &MainWorldStates, width: f32) {
     const SIZE: f32 = 20.0;
     const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
     const GOLD: [f32; 4] = [1.0, 0.85, 0.2, 1.0];
 
-    // Above the scene's background, road and sprite layers (`Painter::rect` draws on layer 0).
-    let bar = SpriteInstance::at([0.0, 0.0], [width, 36.0]).with_color([0.0, 0.0, 0.0, 0.55]);
-    p.sprite_ex(white, bar, render::HUD_LAYER, BlendMode::Alpha);
+    // Above the scene's background, road and sprite layers.
+    let bar_color = [0.0, 0.0, 0.0, 0.55];
+    p.rect_ex(
+        [0.0, 0.0],
+        [width, 36.0],
+        bar_color,
+        render::HUD_LAYER,
+        BlendMode::Alpha,
+    );
 
     let speed = 5.0 * (states.player_view.speed / 500.0).round();
     let LapsState {
