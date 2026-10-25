@@ -15,7 +15,6 @@
     mismatched_lifetime_syntaxes,
     elided_lifetimes_in_paths,
     unused_qualifications,
-    unreachable_patterns,
     dead_code
 )]
 #![allow(

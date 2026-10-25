@@ -2481,10 +2481,8 @@ dependencies = [
  "game-toolkit",
  "kira",
  "log",
- "rayon",
  "sillyecs",
  "sillyecs-build",
- "tracing",
 ]
 
 [[package]]
@@ -2649,15 +2647,19 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "sillyecs"
-version = "0.0.7"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2642eb11a76950c6d2d13bec890bce7918c83e4564a3e475c4eaef71696b76d3"
+checksum = "6827a9bed6fe40d417c36521a4f58858d87cb545927df4f96c010446c90d17a3"
+dependencies = [
+ "rayon",
+ "tracing",
+]
 
 [[package]]
 name = "sillyecs-build"
-version = "0.0.7"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d686eceba9e1485684a82f1983579196f9ec5d2630c8bbdf0e850e67f4a94454"
+checksum = "58fbdd615f2653f2976f6da0913593ba10c2f23f5d0700df857f0343a5ca561d"
 dependencies = [
  "minijinja",
  "serde",
@@ -3080,19 +3082,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
 dependencies = [
  "pin-project-lite",
- "tracing-attributes",
  "tracing-core",
-]
-
-[[package]]
-name = "tracing-attributes"
-version = "0.1.31"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
 ]
 
 [[package]]

@@ -11,18 +11,15 @@ game-toolkit = { version = "0.3", features = ["ecs"] }
 # Only for `Tween`, to turn the music down on the handle `Audio::play` returns.
 kira = { version = "0.12", default-features = false }
 log = "0.4"
-# The generated ECS code logs via tracing and offers a rayon-parallel phase runner.
-rayon = "1"
-# Runtime types (`EntityId`, `FrameContext`, ...) the generated ECS code refers to.
-sillyecs = "0.0.7"
-tracing = "0.1"
+# Runtime types (`EntityId`, `FrameContext`, ...) and re-exports the generated ECS code uses.
+sillyecs = "0.1.0"
 
 # Native builds log via env_logger; on the web the toolkit logs to the browser console.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger = "0.11"
 
 [build-dependencies]
-sillyecs-build = "0.0.7"
+sillyecs-build = "0.1.0"
 
 # Decoding the music and pushing ~5k quads a frame is painfully slow unoptimized.
 [profile.dev.package."*"]
