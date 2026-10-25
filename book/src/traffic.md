@@ -77,10 +77,10 @@ somehow ended up beyond ±0.9, it drifts back towards the middle by 0.1 per step
 
 Two shortcuts keep this cheap. Cars more than `DRAW_DISTANCE` segments ahead of the player don't
 bother steering at all, since nobody would see it. And the grid the AI reads is the one built in
-the *previous* step (`Traffic` runs before `TrafficIndex`), (and the same goes for the player's
-position, published by `Snapshot` at the end of the previous step), so every car decides based on
-where everybody was 1/60 s ago, which is close enough that you'd never notice, and it means the AI never
-has to see a half-updated world.
+the *previous* step, since `Traffic` runs before `TrafficIndex`; the same goes for the player's
+position, which `Snapshot` publishes at the end of each step. Every car decides based on where
+everybody was 1/60 s ago, which is close enough that you'd never notice, and the AI never has to
+see a half-updated world.
 
 What the AI doesn't do is collide with other AI cars. Two cars that fail to swerve in time simply
 drive through each other; the original works the same way, and the port keeps it.
