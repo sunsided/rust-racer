@@ -28,6 +28,19 @@ In the browser: `task web` serves a live-rebuilding build at http://localhost:80
 the first key press, since browsers keep audio muted until then. Run `task assets:manifest`
 after adding files to `assets/`, so the web build preloads them.
 
+## License
+
+Copyright © 2026 Markus Mayer
+
+The code is triple licensed under your choice of either of:
+
+- European Union Public Licence, Version 1.2, ([LICENSE-EUPL](LICENSE-EUPL)
+  or https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12)
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+The art and music in `assets/` are not covered by this; see the credits below.
+
 ## Credits
 
 Game design, graphics and music are from
