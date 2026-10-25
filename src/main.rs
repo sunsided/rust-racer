@@ -119,6 +119,10 @@ impl Music {
         let (Some(audio), Some(sound)) = (&mut ctx.audio, self.sound) else {
             return;
         };
+        // On the web, audio only starts with the first key press or click.
+        if !audio.is_started() {
+            return;
+        }
         let playing = self
             .handle
             .as_ref()
@@ -200,12 +204,16 @@ fn format_time(secs: f32) -> String {
 }
 
 fn main() -> Result<()> {
+    #[cfg(not(target_arch = "wasm32"))]
     env_logger::init();
     run::<Racer>(AppConfig {
         title: "Rust Racer".into(),
         width: 1024,
         height: 768,
+        // The crate's assets/ natively; on the web, "assets" next to index.html.
         asset_root: asset_root!(),
+        // On the web, render into index.html's <canvas id="game">.
+        canvas_id: Some("game".into()),
         ..Default::default()
     })
 }

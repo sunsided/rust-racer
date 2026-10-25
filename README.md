@@ -22,8 +22,11 @@ Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
 - `src/track.rs` builds the road and scenery, `src/render.rs` projects and draws it. The road
   trapezoids are filled as scanline rects, since the toolkit has no polygon primitive.
 
-Native only for now. sillyecs 0.1 can run in the browser with its `wasm` feature, but the web
-build isn't set up yet.
+In the browser: `task web` serves a live-rebuilding build at http://localhost:8080, and
+`PROFILE=release task web:build` builds into `dist/`. Both need `trunk`
+(`cargo install trunk --locked`) and the `wasm32-unknown-unknown` target. The music starts with
+the first key press, since browsers keep audio muted until then. Run `task assets:manifest`
+after adding files to `assets/`, so the web build preloads them.
 
 ## Credits
 
