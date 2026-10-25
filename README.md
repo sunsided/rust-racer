@@ -4,7 +4,8 @@ An OutRun-style pseudo-3D racer: a Rust port of Jake Gordon's
 [javascript-racer](https://github.com/jakesgordon/javascript-racer) (v4, "final") built on
 [game-toolkit](https://github.com/sunsided/game-toolkit), with the simulation running in a
 [sillyecs](https://github.com/sunsided/sillyecs) world.
-[Play it in the browser.](https://sunsided.github.io/rust-racer/)
+[Play it in the browser](https://sunsided.github.io/rust-racer/play/), or
+[read how it works](https://sunsided.github.io/rust-racer/).
 
 ![Driving through a curve past billboards, with traffic ahead](docs/screenshot.png)
 
@@ -15,6 +16,10 @@ cargo run --release
 Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
 
 ## How it's put together
+
+The [book](https://sunsided.github.io/rust-racer/) (sources in `book/`, `task book` to serve it
+locally with `mdbook`) explains the pseudo-3D rendering, the driving and traffic, and the Rust side in
+detail. In short:
 
 - `ecs.yaml` describes the world; `build.rs` generates it with sillyecs. Cars and the player
   are entities. The track, controls, per-segment traffic grid, player view, background scroll

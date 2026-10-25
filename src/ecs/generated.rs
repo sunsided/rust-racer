@@ -1,24 +1,10 @@
 //! The code sillyecs generates from `ecs.yaml` (see `build.rs`), in its own module so the lint
 //! exemptions below don't extend to the hand-written components, states and systems.
 
-#![allow(
-    unsafe_code,
-    unsafe_op_in_unsafe_fn,
-    mismatched_lifetime_syntaxes,
-    elided_lifetimes_in_paths,
-    unused_qualifications,
-    dead_code
-)]
-#![allow(
-    clippy::missing_safety_doc,
-    clippy::new_without_default,
-    clippy::nonminimal_bool,
-    clippy::excessive_precision,
-    clippy::len_without_is_empty,
-    clippy::extra_unused_type_parameters,
-    rustdoc::broken_intra_doc_links,
-    rustdoc::redundant_explicit_links
-)]
+// The generated code makes unchecked slice accesses without `unsafe {}` blocks, has unused
+// `NAME` constants, and links docs to items that don't exist (sunsided/sillyecs#65).
+#![allow(unsafe_op_in_unsafe_fn, dead_code)]
+#![allow(rustdoc::broken_intra_doc_links, rustdoc::redundant_explicit_links)]
 
 // The generated code refers to the component data, states and system data by name.
 use super::*;
