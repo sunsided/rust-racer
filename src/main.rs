@@ -5,22 +5,18 @@
 //! Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
 
 mod ecs;
+mod music;
 mod race;
 mod render;
 mod track;
 
 use game_toolkit::prelude::*;
-use kira::Tween;
-use kira::sound::PlaybackState;
-use kira::sound::static_sound::StaticSoundHandle;
 
 use ecs::{MainWorldStates, RacerWorld, SystemFactory};
+use music::Music;
 use race::{ControlsState, LapsState, player_z};
 use render::{Renderer, Textures};
 use track::Track;
-
-/// The original plays its music at 5% volume ("shhhh! annoying music!"): -26 dB.
-const MUSIC_VOLUME_DB: f32 = -26.0;
 
 struct Racer {
     world: RacerWorld,
@@ -42,11 +38,7 @@ impl Game for Racer {
         let mut world = RacerWorld::new(&SystemFactory, states, ChannelQueue::new());
         ecs::spawn_racers(&mut world, &mut ctx.rng);
 
-        let music = Music {
-            sound: ctx.load_sound("racer.ogg")?,
-            handle: None,
-            muted: false,
-        };
+        let music = Music::load(ctx)?;
 
         Ok(Self {
             world,
@@ -61,7 +53,7 @@ impl Game for Racer {
             ctx.quit();
         }
         if ctx.input.key_pressed(Key::KeyM) {
-            self.music.muted = !self.music.muted;
+            self.music.toggle_mute();
         }
         self.music.update(ctx);
 
@@ -104,50 +96,6 @@ fn read_input(input: &Input) -> ControlsState {
         controls.slower |= pad.button_held(Button::West) || pad.button_held(Button::LeftTrigger2);
     }
     controls
-}
-
-/// The background music, restarted whenever it ends.
-struct Music {
-    /// `None` when there is no audio device.
-    sound: Option<SoundId>,
-    handle: Option<StaticSoundHandle>,
-    muted: bool,
-}
-
-impl Music {
-    fn update(&mut self, ctx: &mut Context) {
-        let (Some(audio), Some(sound)) = (&mut ctx.audio, self.sound) else {
-            return;
-        };
-        // On the web, audio only starts with the first key press or click.
-        if !audio.is_started() {
-            return;
-        }
-        let playing = self
-            .handle
-            .as_ref()
-            .is_some_and(|h| h.state() != PlaybackState::Stopped);
-        if !playing {
-            match audio.play(sound) {
-                Ok(mut handle) => {
-                    handle.set_volume(MUSIC_VOLUME_DB, Tween::default());
-                    self.handle = Some(handle);
-                }
-                Err(err) => {
-                    log::warn!("cannot play music: {err}");
-                    self.sound = None;
-                    return;
-                }
-            }
-        }
-        if let Some(handle) = &mut self.handle {
-            match (self.muted, handle.state()) {
-                (true, PlaybackState::Playing) => handle.pause(Tween::default()),
-                (false, PlaybackState::Paused) => handle.resume(Tween::default()),
-                _ => {}
-            }
-        }
-    }
 }
 
 fn draw_hud(p: &mut Painter<'_>, white: TextureId, states: &MainWorldStates, width: f32) {
