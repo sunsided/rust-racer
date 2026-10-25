@@ -4,14 +4,26 @@
 allow_unsafe: true
 
 states:
-  - name: Race
-    description: Track geometry, driver input, the player snapshot and the per-segment traffic index.
+  - name: Track
+    description: The road geometry and roadside scenery; never changes during a race.
+  - name: Controls
+    description: The driving controls held this frame, written by the game loop.
+  - name: TrafficGrid
+    description: The AI cars in each track segment, rebuilt every step.
+  - name: PlayerView
+    description: The player car as of the last step, for the traffic AI and the renderer.
+  - name: Backdrop
+    description: Scroll offsets of the parallax background layers.
+  - name: Laps
+    description: Current, last and fastest lap times.
 
 components:
   - name: TrackPosition
   - name: Speed
   - name: CarModel
   - name: Driver
+  - name: StepOrigin
+    description: Where on the track the entity started the current step.
 
 archetypes:
   - name: Car
@@ -27,6 +39,7 @@ archetypes:
       - TrackPosition
       - Speed
       - Driver
+      - StepOrigin
 
 phases:
   - name: FixedUpdate
@@ -34,9 +47,12 @@ phases:
 
 systems:
   - name: Traffic
+    description: Steers the AI cars around slower traffic and the player, and moves them.
     phase: FixedUpdate
     states:
-      - use: Race
+      - use: Track
+      - use: TrafficGrid
+      - use: PlayerView
     inputs:
       - Speed
       - CarModel
@@ -44,10 +60,12 @@ systems:
       - TrackPosition
 
   - name: TrafficIndex
+    description: Buckets the AI cars into their track segments.
     phase: FixedUpdate
     run_after: [Traffic]
     states:
-      - use: Race
+      - use: Track
+      - use: TrafficGrid
         default: write
     inputs:
       - TrackPosition
@@ -55,12 +73,62 @@ systems:
       - CarModel
 
   - name: Driving
+    description: Applies the player's controls, the curves' centrifugal force and off-road drag.
     phase: FixedUpdate
     run_after: [TrafficIndex]
     states:
-      - use: Race
-        default: write
+      - use: Track
+      - use: Controls
     outputs:
+      - TrackPosition
+      - Speed
+      - Driver
+      - StepOrigin
+
+  - name: Collision
+    description: Stops the player at roadside scenery and behind slower cars.
+    phase: FixedUpdate
+    run_after: [Driving]
+    states:
+      - use: Track
+      - use: TrafficGrid
+    inputs:
+      - StepOrigin
+    outputs:
+      - TrackPosition
+      - Speed
+
+  - name: LapTimer
+    description: Times laps as the player crosses the start line.
+    phase: FixedUpdate
+    run_after: [Collision]
+    states:
+      - use: Laps
+        default: write
+    inputs:
+      - TrackPosition
+      - StepOrigin
+
+  - name: Parallax
+    description: Scrolls the background layers as the player drives through curves.
+    phase: FixedUpdate
+    run_after: [Collision]
+    states:
+      - use: Track
+      - use: Backdrop
+        default: write
+    inputs:
+      - TrackPosition
+      - StepOrigin
+
+  - name: Snapshot
+    description: Publishes the player car's state for the traffic AI and the renderer.
+    phase: FixedUpdate
+    run_after: [Collision]
+    states:
+      - use: PlayerView
+        default: write
+    inputs:
       - TrackPosition
       - Speed
       - Driver

@@ -14,9 +14,11 @@ Arrow keys / WASD (or a gamepad) drive, M toggles the music, Esc quits.
 ## How it's put together
 
 - `ecs.yaml` describes the world; `build.rs` generates it with sillyecs. Cars and the player
-  are entities; the track, input, lap times and a per-segment traffic index live in the shared
-  `Race` state. Three systems run in the 60 Hz `FixedUpdate` phase: `Traffic` (AI steering and
-  movement), `TrafficIndex` (buckets cars into segments) and `Driving` (the player).
+  are entities. The track, controls, per-segment traffic grid, player view, background scroll
+  and lap times are separate states, so each system declares exactly what it reads and writes.
+  Seven systems run in the 60 Hz `FixedUpdate` phase: `Traffic` (AI steering and movement),
+  `TrafficIndex` (buckets cars into segments), `Driving` (the player's controls),
+  `Collision`, `LapTimer`, `Parallax` and `Snapshot` (publishes the player car).
 - `src/track.rs` builds the road and scenery, `src/render.rs` projects and draws it. The road
   trapezoids are filled as scanline rects, since the toolkit has no polygon primitive.
 

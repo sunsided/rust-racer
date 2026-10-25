@@ -15,7 +15,7 @@ use kira::sound::PlaybackState;
 use kira::sound::static_sound::StaticSoundHandle;
 
 use ecs::{MainWorldStates, RacerWorld, SystemFactory};
-use race::{DriverInput, LapTimes, RaceState, player_z};
+use race::{ControlsState, LapsState, player_z};
 use render::{Renderer, Textures};
 use track::Track;
 
@@ -38,9 +38,7 @@ impl Game for Racer {
         };
 
         let track = Track::build(&mut ctx.rng, player_z());
-        let states = MainWorldStates {
-            race: RaceState::new(track),
-        };
+        let states = ecs::race_states(track);
         let mut world = RacerWorld::new(&SystemFactory, states, ChannelQueue::new());
         ecs::spawn_racers(&mut world, &mut ctx.rng);
 
@@ -67,7 +65,7 @@ impl Game for Racer {
         }
         self.music.update(ctx);
 
-        self.world.states.race.input = read_input(&ctx.input);
+        self.world.states.controls = read_input(&ctx.input);
         // Runs the FixedUpdate phase as many times as the elapsed real time allows.
         self.world.apply_system_phases();
     }
@@ -82,17 +80,17 @@ impl Game for Racer {
     fn render(&mut self, ctx: &mut Context, frame: &mut Frame) {
         let (w, h) = ctx.gfx.size();
         let size = [w as f32, h as f32];
-        let race = &self.world.states.race;
+        let states = &self.world.states;
         let mut p = frame.painter(&mut ctx.gfx);
         self.renderer
-            .draw(&mut p, &self.textures, race, size, &mut ctx.rng);
-        draw_hud(&mut p, self.textures.white, race, size[0]);
+            .draw(&mut p, &self.textures, states, size, &mut ctx.rng);
+        draw_hud(&mut p, self.textures.white, states, size[0]);
     }
 }
 
-fn read_input(input: &Input) -> DriverInput {
+fn read_input(input: &Input) -> ControlsState {
     let held = |keys: [Key; 2]| keys.iter().any(|&k| input.key_held(k));
-    let mut controls = DriverInput {
+    let mut controls = ControlsState {
         left: held([Key::ArrowLeft, Key::KeyA]),
         right: held([Key::ArrowRight, Key::KeyD]),
         faster: held([Key::ArrowUp, Key::KeyW]),
@@ -148,7 +146,7 @@ impl Music {
     }
 }
 
-fn draw_hud(p: &mut Painter<'_>, white: TextureId, race: &RaceState, width: f32) {
+fn draw_hud(p: &mut Painter<'_>, white: TextureId, states: &MainWorldStates, width: f32) {
     const SIZE: f32 = 20.0;
     const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
     const GOLD: [f32; 4] = [1.0, 0.85, 0.2, 1.0];
@@ -157,13 +155,13 @@ fn draw_hud(p: &mut Painter<'_>, white: TextureId, race: &RaceState, width: f32)
     let bar = SpriteInstance::at([0.0, 0.0], [width, 36.0]).with_color([0.0, 0.0, 0.0, 0.55]);
     p.sprite_ex(white, bar, render::HUD_LAYER, BlendMode::Alpha);
 
-    let speed = 5.0 * (race.player.speed / 500.0).round();
-    let LapTimes {
+    let speed = 5.0 * (states.player_view.speed / 500.0).round();
+    let LapsState {
         current,
         last,
         fastest,
         last_was_fastest,
-    } = race.laps;
+    } = states.laps;
     let lap_color = if last_was_fastest { GOLD } else { WHITE };
 
     let column = width / 4.0;

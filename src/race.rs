@@ -1,4 +1,4 @@
-//! The shared `Race` ECS state, the component payloads, and the driving constants.
+//! The ECS states, the component payloads, and the driving constants.
 
 use crate::track::{AtlasRect, SEGMENT_LENGTH, Track, sprites};
 
@@ -65,18 +65,24 @@ pub struct DriverData {
     pub updown: f32,
 }
 
+/// Where the entity was on the track (its `z`) when the current step began.
+pub type StepOriginData = f32;
+
+/// The road never changes during a race, so the track is used as the state as is.
+pub type TrackState = Track;
+
 /// Held driving controls, sampled once per frame.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct DriverInput {
+pub struct ControlsState {
     pub left: bool,
     pub right: bool,
     pub faster: bool,
     pub slower: bool,
 }
 
-/// The player car as last simulated, for traffic AI and rendering.
+/// The player car as of the last step, for the traffic AI and rendering.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct PlayerSnapshot {
+pub struct PlayerViewState {
     /// Camera z; the car itself is `player_z()` further ahead.
     pub position: f32,
     pub x: f32,
@@ -101,8 +107,44 @@ impl TrafficCar {
     }
 }
 
+/// The AI cars in each track segment, rebuilt every step by the `TrafficIndex` system.
+#[derive(Debug, Default)]
+pub struct TrafficGridState {
+    segments: Vec<Vec<TrafficCar>>,
+}
+
+impl TrafficGridState {
+    pub fn new(segments: usize) -> Self {
+        Self {
+            segments: vec![Vec::new(); segments],
+        }
+    }
+
+    pub fn cars(&self, segment: usize) -> &[TrafficCar] {
+        &self.segments[segment]
+    }
+
+    pub fn clear(&mut self) {
+        for cars in &mut self.segments {
+            cars.clear();
+        }
+    }
+
+    pub fn insert(&mut self, segment: usize, car: TrafficCar) {
+        self.segments[segment].push(car);
+    }
+}
+
+/// Scroll offsets (`0..1`) of the sky, hill and tree background layers.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct BackdropState {
+    pub sky: f32,
+    pub hills: f32,
+    pub trees: f32,
+}
+
 #[derive(Debug, Clone, Copy)]
-pub struct LapTimes {
+pub struct LapsState {
     pub current: f32,
     pub last: Option<f32>,
     pub fastest: f32,
@@ -110,39 +152,13 @@ pub struct LapTimes {
     pub last_was_fastest: bool,
 }
 
-impl Default for LapTimes {
+impl Default for LapsState {
     fn default() -> Self {
         Self {
             current: 0.0,
             last: None,
             fastest: 180.0,
             last_was_fastest: false,
-        }
-    }
-}
-
-/// Everything the systems share: the track, the player's input and snapshot, traffic
-/// indexed per segment, background scroll, and lap timing.
-#[derive(Debug, Default)]
-pub struct RaceState {
-    pub track: Track,
-    pub input: DriverInput,
-    pub player: PlayerSnapshot,
-    /// The AI cars in each segment, rebuilt every step by the `TrafficIndex` system.
-    pub traffic: Vec<Vec<TrafficCar>>,
-    /// Scroll offsets (`0..1`) of the sky, hill and tree layers.
-    pub sky_offset: f32,
-    pub hill_offset: f32,
-    pub tree_offset: f32,
-    pub laps: LapTimes,
-}
-
-impl RaceState {
-    pub fn new(track: Track) -> Self {
-        Self {
-            traffic: vec![Vec::new(); track.len()],
-            track,
-            ..Default::default()
         }
     }
 }

@@ -6,6 +6,7 @@
 
 use game_toolkit::prelude::*;
 
+use crate::ecs::MainWorldStates;
 use crate::race::*;
 use crate::track::*;
 
@@ -56,13 +57,13 @@ impl Renderer {
         &mut self,
         p: &mut Painter<'_>,
         tex: &Textures,
-        race: &RaceState,
+        states: &MainWorldStates,
         size: [f32; 2],
         rng: &mut Rng,
     ) {
         let [width, height] = size;
-        let track = &race.track;
-        let player = &race.player;
+        let track = &states.track;
+        let player = &states.player_view;
         let camera_depth = camera_depth();
         let player_z = player_z();
         let resolution = height / 480.0;
@@ -81,7 +82,7 @@ impl Renderer {
             bg,
             size,
             SKY,
-            race.sky_offset,
+            states.backdrop.sky,
             resolution * SKY_SPEED * player_y,
         );
         draw_backdrop(
@@ -89,7 +90,7 @@ impl Renderer {
             bg,
             size,
             HILLS,
-            race.hill_offset,
+            states.backdrop.hills,
             resolution * HILL_SPEED * player_y,
         );
         draw_backdrop(
@@ -97,7 +98,7 @@ impl Renderer {
             bg,
             size,
             TREES,
-            race.tree_offset,
+            states.backdrop.trees,
             resolution * TREE_SPEED * player_y,
         );
 
@@ -151,7 +152,7 @@ impl Renderer {
             let segment = &track.segments[(base + n) % track.len()];
             let view = &self.views[n];
 
-            for car in &race.traffic[segment.index] {
+            for car in states.traffic_grid.cars(segment.index) {
                 let scale = interpolate(view.p1.scale, view.p2.scale, car.percent);
                 let x = interpolate(view.p1.x, view.p2.x, car.percent)
                     + scale * car.offset * ROAD_WIDTH * width / 2.0;
