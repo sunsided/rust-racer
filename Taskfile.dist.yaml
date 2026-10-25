@@ -72,6 +72,20 @@ tasks:
     cmds:
       - trunk build {{.PROFILE_FLAG}} {{.CLI_ARGS}}
 
+  book:
+    desc: Serve the book with live reload at http://localhost:3000 (needs mdbook)
+    preconditions: &book-preconditions
+      - sh: command -v mdbook
+        msg: "mdbook not found — run: cargo install mdbook --locked"
+    cmds:
+      - mdbook serve book --open {{.CLI_ARGS}}
+
+  book:build:
+    desc: Build the book into book/book/
+    preconditions: *book-preconditions
+    cmds:
+      - mdbook build book {{.CLI_ARGS}}
+
   assets:manifest:
     desc: Regenerate assets/manifest.txt, the list of files the web build preloads
     dir: assets

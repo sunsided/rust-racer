@@ -1,6 +1,7 @@
 name: Pages
 
-# Builds the browser version with trunk and, on main, deploys it to GitHub Pages.
+# Builds the book with mdBook and the browser version with trunk (served under play/) and,
+# on main, deploys both to GitHub Pages.
 # Deliberately uncached: a deployed build must not restore caches written by other refs.
 
 on:
@@ -19,10 +20,12 @@ env:
   CARGO_TERM_COLOR: always
   TRUNK_VERSION: v0.21.14
   TRUNK_SHA256: f2b4680cd239693a646a2795e4633c625328d7b2a044fbe749fa3a2fe9e7036b
+  MDBOOK_VERSION: v0.5.4
+  MDBOOK_SHA256: 3f28de05dafca9d0f2eab99c662116b0e37b89b1d96a08f8f430b9eeae958cd7
 
 jobs:
   build:
-    name: Build (trunk)
+    name: Build (trunk, mdBook)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -41,8 +44,18 @@ jobs:
           echo "${TRUNK_SHA256}  trunk.tar.gz" | sha256sum --check
           tar -xzf trunk.tar.gz -C "${HOME}/.cargo/bin"
           rm trunk.tar.gz
-      - name: Build
-        run: trunk build --release --locked
+      - name: Install mdBook
+        run: |
+          curl -fsSLo mdbook.tar.gz "https://github.com/rust-lang/mdBook/releases/download/${MDBOOK_VERSION}/mdbook-${MDBOOK_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${MDBOOK_SHA256}  mdbook.tar.gz" | sha256sum --check
+          tar -xzf mdbook.tar.gz -C "${HOME}/.cargo/bin"
+          rm mdbook.tar.gz
+      # The book is the site root and embeds the game from play/. mdBook empties its destination
+      # first, so it has to build before trunk writes into dist/play.
+      - name: Build book
+        run: mdbook build book --dest-dir dist
+      - name: Build game
+        run: trunk build --release --locked --dist dist/play
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist

@@ -1,0 +1,13 @@
+[book]
+title = "Rust Racer: How It Works"
+description = "How an OutRun-style pseudo-3D racer works, and how to build one in Rust."
+authors = ["Markus Mayer"]
+language = "en"
+src = "src"
+
+[output.html]
+git-repository-url = "https://github.com/sunsided/rust-racer"
+edit-url-template = "https://github.com/sunsided/rust-racer/edit/main/book/{path}"
+site-url = "/rust-racer/"
+additional-js = ["play-button.js"]
+mathjax-support = true

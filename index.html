@@ -12,9 +12,29 @@
       html, body { margin: 0; height: 100%; background: #111; }
       body { display: flex; align-items: center; justify-content: center; }
       canvas { outline: none; }
+      #book {
+        position: fixed; left: 12px; bottom: 10px;
+        font: 14px sans-serif; color: #aaa; text-decoration: none;
+      }
+      #book:hover { color: #fff; }
     </style>
   </head>
   <body>
     <canvas id="game" tabindex="0"></canvas>
+    <a id="book" href="../" hidden>← How it works</a>
+    <script>
+      // Link back to the book when the game was deployed inside it (GitHub Pages), but not from
+      // the book's own embed, nor from `task web` or itch.io builds, which have no book around.
+      if (window.self === window.top) {
+        fetch("../index.html")
+          .then((r) => (r.ok ? r.text() : ""))
+          .then((html) => {
+            if (html.includes("Rust Racer: How It Works")) {
+              document.getElementById("book").hidden = false;
+            }
+          })
+          .catch(() => {});
+      }
+    </script>
   </body>
 </html>
