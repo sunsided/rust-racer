@@ -2649,9 +2649,9 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "sillyecs"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6827a9bed6fe40d417c36521a4f58858d87cb545927df4f96c010446c90d17a3"
+checksum = "c9c11fde61e1e47f0c86c3cb4386abf6c5b29051185d4c4bfbd71c64ac8176b6"
 dependencies = [
  "rayon",
  "tracing",
@@ -2660,9 +2660,9 @@ dependencies = [
 
 [[package]]
 name = "sillyecs-build"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58fbdd615f2653f2976f6da0913593ba10c2f23f5d0700df857f0343a5ca561d"
+checksum = "ef315394a61ff6d07d565a2dc7d04b90b8ffad0ee2cb1260e04bb0e26c0bf132"
 dependencies = [
  "minijinja",
  "serde",

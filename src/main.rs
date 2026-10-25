@@ -12,8 +12,8 @@ mod track;
 
 use game_toolkit::prelude::*;
 
+use ecs::{CommandQueue, MainWorldStates, RacerWorld};
 use ecs::{ControlsState, LapsState};
-use ecs::{MainWorldStates, RacerWorld, SystemFactory};
 use music::Music;
 use race::player_z;
 use render::{Renderer, Textures};
@@ -35,7 +35,7 @@ impl Game for Racer {
 
         let track = Track::build(&mut ctx.rng, player_z());
         let states = ecs::race_states(track);
-        let mut world = RacerWorld::new(&SystemFactory, states, ChannelQueue::new());
+        let mut world = RacerWorld::new(&(), states, CommandQueue::default());
         ecs::spawn_racers(&mut world, &mut ctx.rng);
 
         let music = Music::load(ctx)?;

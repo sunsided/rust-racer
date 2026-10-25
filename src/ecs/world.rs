@@ -11,22 +11,29 @@ use crate::track::{SEGMENT_LENGTH, Track, random_side, sprites};
 /// The racer has no game-specific world commands.
 type RacerCommand = WorldCommand<Infallible>;
 
-pub type RacerWorld = MainWorld<NoOpPhaseEvents, ChannelQueue<RacerCommand>>;
+pub type RacerWorld = MainWorld<NoOpPhaseEvents, CommandQueue>;
 
-// Implement the generated command-queue traits on the toolkit's mpsc-backed queue.
-impl WorldUserCommand for ChannelQueue<RacerCommand> {
-    type UserCommand = Infallible;
-}
-impl WorldCommandSender for ChannelQueue<RacerCommand> {
+/// The world's command queue: the toolkit's mpsc-backed `ChannelQueue`, implementing sillyecs'
+/// queue traits. A newer game-toolkit implements them on `ChannelQueue` itself
+/// (sunsided/game-toolkit#61); until it's released, this wrapper bridges the gap.
+#[derive(Default)]
+pub struct CommandQueue(ChannelQueue<RacerCommand>);
+
+impl sillyecs::CommandSender for CommandQueue {
+    type Command = RacerCommand;
     type Error = std::sync::mpsc::SendError<RacerCommand>;
+
     fn send(&self, command: RacerCommand) -> Result<(), Self::Error> {
-        ChannelQueue::send(self, command)
+        self.0.send(command)
     }
 }
-impl WorldCommandReceiver for ChannelQueue<RacerCommand> {
+
+impl sillyecs::CommandReceiver for CommandQueue {
+    type Command = RacerCommand;
     type Error = std::sync::mpsc::TryRecvError;
+
     fn recv(&self) -> Result<Option<RacerCommand>, Self::Error> {
-        ChannelQueue::try_recv(self)
+        self.0.try_recv()
     }
 }
 
