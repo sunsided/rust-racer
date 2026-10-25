@@ -8,7 +8,7 @@ license = "EUPL-1.2 OR MIT OR Apache-2.0"
 description = "An OutRun-style pseudo-3D racer, ported from jakesgordon/javascript-racer onto game-toolkit."
 
 [dependencies]
-game-toolkit = { version = "0.3", features = ["ecs"] }
+game-toolkit = { version = "0.4", features = ["ecs"] }
 # Only for `Tween`, to turn the music down on the handle `Audio::play` returns.
 kira = { version = "0.12", default-features = false }
 log = "0.4"
