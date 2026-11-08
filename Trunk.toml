@@ -3,6 +3,9 @@ target = "index.html"
 dist = "dist"
 # Relative URLs so the build works from any sub-path (itch.io, GitHub Pages).
 public_url = "./"
+# Stable file names (rust-racer.js / rust-racer_bg.wasm), so a host page can import them and a
+# release's attestation names the files it serves.
+filehash = false
 
 [serve]
 port = 8080

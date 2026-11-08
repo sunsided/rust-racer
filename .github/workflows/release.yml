@@ -1,8 +1,13 @@
 name: Release
 
-# Creates a GitHub release for a pushed version tag. The notes are the annotated tag's message
-# followed by GitHub's generated changelog; a release that already exists (e.g. written by hand
-# before pushing the tag) is left alone. Run it manually to release an existing tag.
+# Creates a GitHub release for a pushed version tag, with the browser build attached: the
+# notes are the annotated tag's message followed by GitHub's generated changelog. A release
+# that already exists (e.g. written by hand before pushing the tag) keeps its notes; the web
+# build is uploaded to it. Run it manually to release an existing tag.
+#
+# The web build is a zip of trunk's output, listed in SHA256SUMS and attested, together with
+# the wasm and JS inside it. game-toolkit.dev embeds it after verifying that:
+#   gh attestation verify rust-racer-<tag>-web.zip --repo sunsided/rust-racer
 
 on:
   push:
@@ -20,21 +25,64 @@ concurrency:
   group: ${{ github.workflow }}-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
+env:
+  CARGO_TERM_COLOR: always
+  TRUNK_VERSION: v0.21.14
+  TRUNK_SHA256: f2b4680cd239693a646a2795e4633c625328d7b2a044fbe749fa3a2fe9e7036b
+
 jobs:
   release:
-    name: Create release
+    name: Build web and release
     runs-on: ubuntu-latest
     permissions:
-      contents: write # create the release
+      contents: write # create the release, upload its files
+      id-token: write # sign the provenance attestations
+      attestations: write # store the provenance attestations
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       TAG: ${{ inputs.tag || github.ref_name }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          persist-credentials: false
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+
+      # trunk fetches the wasm-bindgen CLI matching Cargo.lock on its own.
+      - name: Install trunk
+        run: |
+          curl -fsSLo trunk.tar.gz "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${TRUNK_SHA256}  trunk.tar.gz" | sha256sum --check
+          tar -xzf trunk.tar.gz -C "${HOME}/.cargo/bin"
+          rm trunk.tar.gz
+
+      - name: Build web
+        run: trunk build --release --locked --dist target/web
+
+      - name: Package
+        run: |
+          mkdir out
+          (cd target/web && zip -r -9 "../../out/rust-racer-${TAG}-web.zip" .)
+          (cd out && sha256sum -- * > SHA256SUMS)
+
+      # The zip, and the files inside it, so an unpacked build verifies too.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            out/*.zip
+            target/web/rust-racer_bg.wasm
+            target/web/rust-racer.js
+
       - name: Create release
         run: |
           if gh release view "${TAG}" > /dev/null 2>&1; then
-            echo "Release ${TAG} already exists; leaving it alone."
+            echo "Release ${TAG} already exists; keeping its notes, uploading the web build."
+            gh release upload "${TAG}" out/* --clobber
             exit 0
           fi
           ref=$(gh api "repos/${GH_REPO}/git/ref/tags/${TAG}" --jq '.object.type + " " + .object.sha')
@@ -42,4 +90,4 @@ jobs:
           if [ "${ref%% *}" = "tag" ]; then
             notes=$(gh api "repos/${GH_REPO}/git/tags/${ref#* }" --jq .message)
           fi
-          gh release create "${TAG}" --verify-tag --title "${TAG}" --notes "${notes}" --generate-notes
+          gh release create "${TAG}" out/* --verify-tag --title "${TAG}" --notes "${notes}" --generate-notes
